@@ -14,7 +14,7 @@ Commiting for second time and so on:
 
 git status
 git add .
-git commit -m "implementing faker and basic user tests. miss basic notes, and negative tests"
+git commit -m "basic note tests done. miss negative tests"
 git push -u origin main 
 
 need to fix report, converting it to html or catching the right html report in target folder, close the app between tests 

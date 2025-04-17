@@ -6,6 +6,6 @@ class TestRunner {
 
     @Karate.Test
     Karate runAllTests() {
-        return Karate.run("Health", "Users").relativeTo(getClass());
+        return Karate.run("Health", "Users", "Notes").relativeTo(getClass());
     }
 }
