@@ -22,9 +22,9 @@ jobs:
       - name: Run Karate Tests
         run: mvn clean test
 
-      - name: Upload Karate HTML report
+      - name: Upload Karate reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: karate-summary-report
-          path: target/karate-reports/karate-summary.html
+          name: karate-reports
+          path: target/karate-reports/
