@@ -1,4 +1,4 @@
-Feature: Notes API Health Check
+Feature: Health check
 
   Background:
     * def baseUrl = 'https://practice.expandtesting.com/notes/api'
@@ -13,6 +13,7 @@ Feature: Notes API Health Check
       }
       """
 
+  @health
   Scenario: Validar resposta do health-check
     Given path 'health-check'
     And headers defaultHeaders

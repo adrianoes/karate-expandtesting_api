@@ -85,6 +85,11 @@ Hit :point_right: **Create**.
 
 - Open command prompt in the pom.xml directory (e.g. C:\Users\<user_name>\IdeaProjects\karate-expandtesting_api) and Execute ```mvn clean install``` to run all to removes previous build files while compiles the source code an execute the tests.
 - Hit :point_right:**Testing** button on left side bar in IntelliJ and choose the tests to execute.
+- Go to TestRunner.java file and leave only the desired test combination uncommented, according to its tags. 
+- Execute ```mvn test -Dkarate.options="--tags @negative"``` command to run only negative tests.
+- Execute ```mvn test -Dkarate.options="--tags ~@negative"``` command to run all tests excluding the negative ones.
+- Execute ```mvn test -Dkarate.options="--tags @users @negative"``` command to run only the negative tests inside the @users feature.
+- Execute ```mvn test -Dkarate.options="--tags @users ~@negative"``` command to run only the @users tests excluding the negative ones.
 
 # Support:
 

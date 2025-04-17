@@ -1,4 +1,4 @@
-Feature: Teste de registro de usuário
+Feature: User management
 
   Background:
     * def fakerUtils = Java.type('utils.FakerUtils')
@@ -11,6 +11,7 @@ Feature: Teste de registro de usuário
     * def user_company = user.company
     * def user_updated_password = user.updatedPassword
 
+  @users
   Scenario: Create user
     * def registerForm =
       """
@@ -53,6 +54,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Create user - bad request
     * def registerForm =
       """
@@ -72,6 +74,7 @@ Feature: Teste de registro de usuário
     And match response.success == false
     And match response.message == 'A valid email address is required'
 
+  @users
   Scenario: Login user
     * def registerForm =
       """
@@ -116,6 +119,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Login user - bad request
     * def registerForm =
       """
@@ -171,6 +175,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Login user - unauthorized
     * def registerForm =
       """
@@ -226,6 +231,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users
   Scenario: Retrieve user
     * def registerForm =
       """
@@ -276,6 +282,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Retrieve user - bad request
     * def registerForm =
       """
@@ -323,6 +330,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users
   Scenario: Update user
     * def registerForm =
       """
@@ -384,6 +392,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Update user - bad request
     * def registerForm =
       """
@@ -440,6 +449,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Update user - unauthorized
     * def registerForm =
       """
@@ -496,6 +506,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users
   Scenario: Update user password
     * def registerForm =
       """
@@ -551,6 +562,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Update user password - bad request
     * def registerForm =
       """
@@ -606,6 +618,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Update user password - unauthorized
     * def registerForm =
       """
@@ -661,6 +674,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users
   Scenario: Logout user
     * def registerForm =
       """
@@ -723,6 +737,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users @negative
   Scenario: Logout user - unauthorized
     * def registerForm =
       """
@@ -770,6 +785,7 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @users
   Scenario: Delete user
     * def registerForm =
       """
@@ -810,6 +826,7 @@ Feature: Teste de registro de usuário
     And match response.success == true
     And match response.message == 'Account successfully deleted'
 
+  @users @negative
   Scenario: Delete user - unauthorized
     * def registerForm =
       """

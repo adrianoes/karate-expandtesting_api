@@ -1,4 +1,4 @@
-Feature: Teste de registro de usuário
+Feature: Notes management
 
   Background:
     * def fakerUtils = Java.type('utils.FakerUtils')
@@ -21,6 +21,7 @@ Feature: Teste de registro de usuário
     * def note_description_2 = user.noteDescription2
     * def note_category_2 = user.noteCategory2
 
+  @notes
   Scenario: Create note
     * def registerForm =
       """
@@ -85,6 +86,121 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @notes @negative
+  Scenario: Create note - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note - bad request ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: 'a'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 400
+    And match response.success == false
+    And match response.message == 'Category must be one of the categories: Home, Work, Personal'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes @negative
+  Scenario: Create note - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note - unauthorized ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes
   Scenario: Retrieve all notes
     * def registerForm =
       """
@@ -190,6 +306,93 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @notes @negative
+  Scenario: Retrieve all notes - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create First Note ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 200
+    * def note_id = response.data.id
+    * def note_completed = response.data.completed
+    * def note_created_at = response.data.created_at
+    * def note_updated_at = response.data.updated_at
+
+    # --- Create Second Note ---
+    * def noteForm2 =
+      """
+      {
+        title: '#(note_title_2)',
+        description: '#(note_description_2)',
+        category: '#(note_category_2)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm2
+    When method post
+    Then status 200
+    * def note_id_2 = response.data.id
+    * def note_completed_2 = response.data.completed
+    * def note_created_at_2 = response.data.created_at
+    * def note_updated_at_2 = response.data.updated_at
+
+    # --- Retrieve All Notes - unauthorized ---
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)' }
+    When method get
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
+
+    # --- Delete User Account ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes
   Scenario: Retrieve note
     * def registerForm =
       """
@@ -264,6 +467,74 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @notes @negative
+  Scenario: Retrieve note - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 200
+    * def note_id = response.data.id
+    * def note_completed = response.data.completed
+    * def note_created_at = response.data.created_at
+    * def note_updated_at = response.data.updated_at
+
+    # --- Retrieve Note - unauthorized ---
+    Given url 'https://practice.expandtesting.com/notes/api/notes/' + note_id
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)' }
+    When method get
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes
   Scenario: Update note
     * def registerForm =
       """
@@ -346,6 +617,157 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @notes @negative
+  Scenario: Update note - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 200
+    * def note_id = response.data.id
+    * def note_created_at = response.data.created_at
+
+    # --- Update Note - bad request ---
+    * def noteUpdateForm =
+      """
+      {
+        title: '#(note_updated_title)',
+        description: '#(note_updated_description)',
+        completed: '#(note_updated_completed)',
+        category: 'a'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes/' + note_id
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteUpdateForm
+    When method put
+    Then status 400
+    And match response.success == false
+    And match response.message == 'Category must be one of the categories: Home, Work, Personal'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes @negative
+  Scenario: Update note - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 200
+    * def note_id = response.data.id
+    * def note_created_at = response.data.created_at
+
+    # --- Update Note - unauthorized ---
+    * def noteUpdateForm =
+      """
+      {
+        title: '#(note_updated_title)',
+        description: '#(note_updated_description)',
+        completed: '#(note_updated_completed)',
+        category: '#(note_updated_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes/' + note_id
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteUpdateForm
+    When method put
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes
   Scenario: Update note status
     * def registerForm =
       """
@@ -428,6 +850,157 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  @notes @negative
+  Scenario: Update note status - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 200
+    * def note_id = response.data.id
+    * def note_title_created = response.data.title
+    * def note_description_created = response.data.description
+    * def note_category_created = response.data.category
+    * def note_created_at = response.data.created_at
+
+    # --- Patch Note Completed Status - bad request ---
+    * def patchCompletedForm =
+      """
+      {
+        completed: 'a'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes/' + note_id
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields patchCompletedForm
+    When method patch
+    Then status 400
+    And match response.success == false
+    And match response.message == 'Note completed status must be boolean'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes @negative
+  Scenario: Update note status - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 200
+    * def note_id = response.data.id
+    * def note_title_created = response.data.title
+    * def note_description_created = response.data.description
+    * def note_category_created = response.data.category
+    * def note_created_at = response.data.created_at
+
+    # --- Patch Note Completed Status - unauthorized ---
+    * def patchCompletedForm =
+      """
+      {
+        completed: '#(note_updated_completed)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes/' + note_id
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields patchCompletedForm
+    When method patch
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes
   Scenario: Delete note
     * def registerForm =
       """
@@ -484,6 +1057,134 @@ Feature: Teste de registro de usuário
     Then status 200
     And match response.success == true
     And match response.message == 'Note successfully deleted'
+
+    # --- Delete User Account ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes @negative
+  Scenario: Delete note - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 200
+    * def note_id = response.data.id
+
+    # --- Delete Note - bad request ---
+    Given url 'https://practice.expandtesting.com/notes/api/notes/' + '@' + note_id
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 400
+    And match response.success == false
+    And match response.message == 'Note ID must be a valid ID'
+
+    # --- Delete User Account ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  @notes @negative
+  Scenario: Delete note - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Create Note ---
+    * def noteForm =
+      """
+      {
+        title: '#(note_title)',
+        description: '#(note_description)',
+        category: '#(note_category)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/notes'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields noteForm
+    When method post
+    Then status 200
+    * def note_id = response.data.id
+
+    # --- Delete Note - unauthorized ---
+    Given url 'https://practice.expandtesting.com/notes/api/notes/' + note_id
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)' }
+    When method delete
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
 
     # --- Delete User Account ---
     Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
