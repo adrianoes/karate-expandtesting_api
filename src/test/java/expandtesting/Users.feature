@@ -53,6 +53,25 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  Scenario: Create user - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '@#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register - bad request ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 400
+    And match response.success == false
+    And match response.message == 'A valid email address is required'
+
   Scenario: Login user
     * def registerForm =
       """
@@ -89,6 +108,116 @@ Feature: Teste de registro de usuário
     And match response.data.name == user_name
     And match response.data.email == user_email
     And match response.data.id == user_id
+    * def user_token = response.data.token
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  Scenario: Login user - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login - bad request ---
+    * def loginForm =
+      """
+      {
+        email: '@#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 400
+    And match response.success == false
+    And match response.message == 'A valid email address is required'
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  Scenario: Login user - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login - unauthorized ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '@#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Incorrect email address or password'
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
     * def user_token = response.data.token
 
     # --- Delete ---
@@ -140,6 +269,53 @@ Feature: Teste de registro de usuário
     And match response.data.id == user_id
     And match response.data.name == user_name
     And match response.data.email == user_email
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  Scenario: Retrieve user - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Retrieve Info - bad request ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/profile'
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)' }
+    When method get
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
 
     # --- Delete ---
     Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
@@ -208,6 +384,118 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  Scenario: Update user - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Update - bad request ---
+    * def updateForm =
+      """
+      {
+        name: '#1a',
+        phone: '#(user_phone)',
+        company: '#(user_company)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/profile'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields updateForm
+    When method patch
+    Then status 400
+    And match response.success == false
+    And match response.message == 'User name must be between 4 and 30 characters'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  Scenario: Update user - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Update - unauthorized ---
+    * def updateForm =
+      """
+      {
+        name: '#(user_name)',
+        phone: '#(user_phone)',
+        company: '#(user_company)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/profile'
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields updateForm
+    When method patch
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
   Scenario: Update user password
     * def registerForm =
       """
@@ -256,6 +544,116 @@ Feature: Teste de registro de usuário
     Then status 200
     And match response.success == true
     And match response.message == 'The password was successfully updated'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  Scenario: Update user password - bad request
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Change Password - bad request ---
+    * def passwordChangeForm =
+      """
+      {
+        currentPassword: '#(user_password)',
+        newPassword: '123'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/change-password'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields passwordChangeForm
+    When method post
+    Then status 400
+    And match response.success == false
+    And match response.message == 'New password must be between 6 and 30 characters'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
+  Scenario: Update user password - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Change Password - bad request ---
+    * def passwordChangeForm =
+      """
+      {
+        currentPassword: '#(user_password)',
+        newPassword: '#(user_updated_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/change-password'
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields passwordChangeForm
+    When method post
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
 
     # --- Delete ---
     Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
@@ -325,6 +723,53 @@ Feature: Teste de registro de usuário
     When method delete
     Then status 200
 
+  Scenario: Logout user - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+    * def user_id = response.data.id
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Logout - unauthorized ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/logout'
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)' }
+    When method delete
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+
   Scenario: Delete user
     * def registerForm =
       """
@@ -356,6 +801,54 @@ Feature: Teste de registro de usuário
     When method post
     Then status 200
     * def user_token = response.data.token
+
+    # --- Delete ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '#(user_token)' }
+    When method delete
+    Then status 200
+    And match response.success == true
+    And match response.message == 'Account successfully deleted'
+
+  Scenario: Delete user - unauthorized
+    * def registerForm =
+      """
+      {
+        name: '#(user_name)',
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+
+    # --- Register ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/register'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields registerForm
+    When method post
+    Then status 201
+
+    # --- Login ---
+    * def loginForm =
+      """
+      {
+        email: '#(user_email)',
+        password: '#(user_password)'
+      }
+      """
+    Given url 'https://practice.expandtesting.com/notes/api/users/login'
+    And headers { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
+    * form fields loginForm
+    When method post
+    Then status 200
+    * def user_token = response.data.token
+
+    # --- Delete - unauthorized ---
+    Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'
+    And headers { Accept: 'application/json', 'x-auth-token': '@#(user_token)' }
+    When method delete
+    Then status 401
+    And match response.success == false
+    And match response.message == 'Access token is not valid or has expired, you will need to login'
 
     # --- Delete ---
     Given url 'https://practice.expandtesting.com/notes/api/users/delete-account'

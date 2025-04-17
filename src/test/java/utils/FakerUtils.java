@@ -12,7 +12,7 @@ public class FakerUtils {
     public static Map<String, Object> generateUserData() {
         Map<String, Object> userData = new HashMap<>();
         userData.put("name", faker.name().fullName());
-        userData.put("email", faker.internet().emailAddress().toLowerCase().replace("-", ""));
+        userData.put("email", faker.regexify("[0-9]{3,5}") + faker.internet().emailAddress().toLowerCase().replace("-", ""));
         userData.put("password", faker.regexify("[A-Za-z0-9]{12,20}"));
         userData.put("updatedName", faker.name().fullName());
         userData.put("phone", faker.regexify("[0-9]{10,12}"));
