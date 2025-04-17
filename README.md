@@ -4,14 +4,16 @@ API testing using [expandtesting docs](https://practice.expandtesting.com/notes/
 
 # Pre-requirements:
 
-| Requirement                              | Version        | Note                                                            |
-| :--------------------------------------- |:---------------| :-------------------------------------------------------------- |
-| IntelliJ IDEA Community Edition          | 2024.3.3       | -                                                               |
-| JDK                                      | 11.0.20        | -                                                               |
-| Maven                                    | 3.9.9          | -                                                               |
-| Karate JUnit 5 maven dependency          | 1.3.1          | -                                                               |
-| Java Faker maven dependency              | 1.0.2          | -                                                               |
-| Karate plugin for IntelliJ               | 2.2.0          | -                                                               |
+| Requirement                                    | Version        | Note                                                            |
+| :--------------------------------------------- |:---------------| :-------------------------------------------------------------- |
+| IntelliJ IDEA Community Edition                | 2024.3.3       | -                                                               |
+| JDK                                            | 11.0.20        | -                                                               |
+| Maven                                          | 3.9.9          | -                                                               |
+| Karate JUnit 5 maven dependency                | 1.3.1          | -                                                               |
+| Java Faker maven dependency                    | 1.0.2          | -                                                               |
+| Karate JUnit 5 maven dependency                | 1.3.1          | -                                                               |
+| Apache Maven Compiler Plugin maven dependency  | 3.13.0         | -                                                               |
+| KMaven Surefire Plugin maven dependency        | 3.5.3          | -                                                               |
 
 # Installation:
 
@@ -40,68 +42,56 @@ API testing using [expandtesting docs](https://practice.expandtesting.com/notes/
 Hit :point_right: **Create**. 
 - Open IntelliJ IDEA, hit :point_right: **File**, hit :point_right: **Settings**, hit :point_right: **Plugins** and in the Marketplace tab, look for Karate and install the one from Karate Labs Inc.
 - See [Karate JUnit 5](https://mvnrepository.com/artifact/com.intuit.karate/karate-junit5/1.3.1), copy the maven dependency code and paste it in the dependency tag. 
-- See [Java Faker](https://mvnrepository.com/artifact/com.github.javafaker/javafaker/1.0.2), copy the maven dependency code and paste it in the dependency tag. Hit :point_right: **Sync maven changes**. Your dependency tag in the pom.xml file, now, should be something like:
+- See [Java Faker](https://mvnrepository.com/artifact/com.github.javafaker/javafaker/1.0.2), copy the maven dependency code and paste it in the dependency tag. 
+- See [Apache Maven Compiler Plugin](https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin/3.13.0), copy the maven dependency code and paste it in the dependency tag. 
+- See [Maven Surefire Plugin](https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin/3.5.3), copy the maven dependency code and paste it in the dependency tag. . Hit :point_right: **Sync maven changes**. Your dependency tag in the pom.xml file, now, should be something like:
 
   ```
     <dependencies>
+
+        <!-- https://mvnrepository.com/artifact/com.intuit.karate/karate-junit5 -->
         <dependency>
             <groupId>com.intuit.karate</groupId>
             <artifactId>karate-junit5</artifactId>
             <version>1.3.1</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.github.javafaker/javafaker -->
         <dependency>
             <groupId>com.github.javafaker</groupId>
             <artifactId>javafaker</artifactId>
             <version>1.0.2</version>
-            <scope>test</scope>
         </dependency>
-    </dependencies>
-  ``` 
-- Also, in the .pom file, a plugin tag must be implemented as below:
 
-  ```
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.version}</version>
-                <configuration>
-                    <encoding>UTF-8</encoding>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.version}</version>
-                <configuration>
-                    <argLine>-Dfile.encoding=UTF-8</argLine>
-                </configuration>
-            </plugin>
-        </plugins>
+        <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin -->
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.13.0</version>
+        </dependency>
+
+    </dependencies>
   ``` 
 
 # Tests:
 
 - Open command prompt in the pom.xml directory (e.g. C:\Users\<user_name>\IdeaProjects\karate-expandtesting_api) and Execute ```mvn clean install``` to run all to removes previous build files while compiles the source code an execute the tests.
-- Go to TestRunner file (e.g. C:\Users\adria\IdeaProjects\karate-expandtesting_api\src\test\java\runner\TestRunner.java) and select a tag combination related to desired tests. Open command prompt in the pom.xml directory (e.g. C:\Users\<user_name>\IdeaProjects\karate-expandtesting_api) and Execute ```mvn clean install``` to run all to removes previous build files while compiles the source code an execute the tests.
-- Open command prompt in the pom.xml directory and Execute ```mvn clean test -Dcucumber.filter.name="Notes info are retrieved"``` to run Notes info are retrieved test. 
 - Hit :point_right:**Testing** button on left side bar in IntelliJ and choose the tests to execute.
 
 # Support:
 
 - [Maven repositories](https://mvnrepository.com/)
 - [Karate Framework Tutorial | Project Setup and Installation using Karate API Automation | Part 2](https://www.youtube.com/watch?v=8-SDRUUIqPM)
-- [Github Actions in Test Automation](https://www.youtube.com/playlist?list=PL9ok7C7Yn9A-6uidd3RXZPf5EfhxkPXa_)
-- [GitHub Actions at a Glance](https://blog.magicpod.com/github-actions-at-a-glance)
 - [Package com.github.javafaker](https://javadoc.io/static/com.github.javafaker/javafaker/1.0.2/com/github/javafaker/package-summary.html)
 - [ChatGPT](https://chatgpt.com/)
-- [Tag Expressions](https://github.com/cucumber/tag-expressions)
-- [10-minute tutorial](https://cucumber.io/docs/guides/10-minute-tutorial)
-- [Expected condition failed: waiting for element to be clickable in Selenium](https://stackoverflow.com/a/57069767)
-- [org.openqa.selenium.TimeoutException: Expected condition failed: waiting for all conditions to be valid](https://stackoverflow.com/a/62832984)
 
 # Tips:
 

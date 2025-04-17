@@ -21,6 +21,5 @@ function fn() {
   // Configurações de log para visualização de requisições e respostas
   karate.configure('logPrettyRequest', true);
   karate.configure('logPrettyResponse', true);
-
   return config; // retorna as configurações
 }
